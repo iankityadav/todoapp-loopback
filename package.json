@@ -49,12 +49,16 @@
     "!*/__tests__"
   ],
   "dependencies": {
+    "@loopback/authentication": "^10.1.2",
+    "@loopback/authentication-jwt": "^0.14.2",
     "@loopback/boot": "^6.1.2",
     "@loopback/core": "^5.1.2",
     "@loopback/repository": "^6.1.2",
     "@loopback/rest": "^13.1.2",
     "@loopback/rest-explorer": "^6.1.2",
+    "@loopback/security": "^0.10.2",
     "@loopback/service-proxy": "^6.1.2",
+    "bcryptjs": "^2.4.3",
     "loopback-connector-postgresql": "^6.0.7",
     "tslib": "^2.0.0"
   },

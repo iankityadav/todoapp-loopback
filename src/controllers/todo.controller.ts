@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {
   Count,
   CountSchema,
@@ -7,23 +8,24 @@ import {
   Where,
 } from '@loopback/repository';
 import {
-  post,
-  param,
+  del,
   get,
   getModelSchemaRef,
+  param,
   patch,
+  post,
   put,
-  del,
   requestBody,
   response,
 } from '@loopback/rest';
 import {Todo} from '../models';
 import {TodoRepository} from '../repositories';
 
+@authenticate('jwt')
 export class TodoController {
   constructor(
     @repository(TodoRepository)
-    public todoRepository : TodoRepository,
+    public todoRepository: TodoRepository,
   ) {}
 
   @post('/todos')
@@ -52,9 +54,7 @@ export class TodoController {
     description: 'Todo model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async count(
-    @param.where(Todo) where?: Where<Todo>,
-  ): Promise<Count> {
+  async count(@param.where(Todo) where?: Where<Todo>): Promise<Count> {
     return this.todoRepository.count(where);
   }
 
@@ -70,9 +70,7 @@ export class TodoController {
       },
     },
   })
-  async find(
-    @param.filter(Todo) filter?: Filter<Todo>,
-  ): Promise<Todo[]> {
+  async find(@param.filter(Todo) filter?: Filter<Todo>): Promise<Todo[]> {
     return this.todoRepository.find(filter);
   }
 
@@ -106,7 +104,7 @@ export class TodoController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Todo, {exclude: 'where'}) filter?: FilterExcludingWhere<Todo>
+    @param.filter(Todo, {exclude: 'where'}) filter?: FilterExcludingWhere<Todo>,
   ): Promise<Todo> {
     return this.todoRepository.findById(id, filter);
   }
