@@ -1,11 +1,13 @@
 import {Getter, inject} from '@loopback/core';
 import {
   DefaultCrudRepository,
+  HasManyRepositoryFactory,
   HasOneRepositoryFactory,
   repository,
 } from '@loopback/repository';
 import {DbDataSource} from '../datasources';
-import {User, UserCredentials, UserRelations} from '../models';
+import {Todo, User, UserCredentials, UserRelations} from '../models';
+import {TodoRepository} from './todo.repository';
 import {UserCredentialsRepository} from './user-credentials.repository';
 
 export class UserRepository extends DefaultCrudRepository<
@@ -18,12 +20,24 @@ export class UserRepository extends DefaultCrudRepository<
     typeof User.prototype.id
   >;
 
+  public readonly todos: HasManyRepositoryFactory<
+    Todo,
+    typeof User.prototype.id
+  >;
+
   constructor(
     @inject('datasources.db') dataSource: DbDataSource,
     @repository.getter('UserCredentialsRepository')
     protected userCredentialsRepositoryGetter: Getter<UserCredentialsRepository>,
+    @repository.getter('TodoRepository')
+    protected todoRepositoryGetter: Getter<TodoRepository>,
   ) {
     super(User, dataSource);
+    this.todos = this.createHasManyRepositoryFactoryFor(
+      'todos',
+      todoRepositoryGetter,
+    );
+    this.registerInclusionResolver('todos', this.todos.inclusionResolver);
     this.userCredentials = this.createHasOneRepositoryFactoryFor(
       'userCredentials',
       userCredentialsRepositoryGetter,
