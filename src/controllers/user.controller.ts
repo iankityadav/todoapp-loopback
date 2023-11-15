@@ -4,12 +4,15 @@ import {
   UserServiceBindings,
 } from '@loopback/authentication-jwt';
 import {inject} from '@loopback/core';
-import {model, property} from '@loopback/repository';
+import {model, property, WhereBuilder} from '@loopback/repository';
 import {
   get,
   getModelSchemaRef,
   post,
   requestBody,
+  RequestContext,
+  Response,
+  RestBindings,
   SchemaObject,
 } from '@loopback/rest';
 import {SecurityBindings, securityId, UserProfile} from '@loopback/security';
@@ -89,12 +92,24 @@ export class UserController {
     public userRepository: UserRepository,
     @inject(SecurityBindings.USER, {optional: true})
     private user: UserProfile,
-  ) {}
+    @inject(RestBindings.Http.CONTEXT)
+    private requestCtx: RequestContext,
+  ) { }
 
   @post('/users/signup', {
     responses: {
       '200': {
         description: 'User model instance',
+        content: {
+          'application/json': {
+            schema: {
+              'x-ts-type': User,
+            },
+          },
+        },
+      },
+      '400': {
+        description: 'Bad request',
         content: {
           'application/json': {
             schema: {
@@ -116,7 +131,16 @@ export class UserController {
       },
     })
     newUserRequest: Omit<NewUserRequest, 'id'>,
-  ): Promise<User> {
+  ): Promise<User | Response> {
+    const existingUserList = await this.userRepository
+      .find(
+        new WhereBuilder()
+          .eq("username", newUserRequest.username)
+      )
+    const {response} = this.requestCtx;
+    if (existingUserList.length > 0) return response.status(400).send({
+      error: "User with given username already exists"
+    });
     const password = await hash(newUserRequest.password, await genSalt());
     delete (newUserRequest as Partial<NewUserRequest>).password;
     const savedUser = await this.userRepository.create(newUserRequest);
@@ -139,6 +163,25 @@ export class UserController {
   })
   async whoAmI(): Promise<string> {
     return this.user[securityId];
+  }
+
+  @authenticate('jwt')
+  @post('/whoAmI', {
+    responses: {
+      '200': {
+        description: 'User details',
+        content: {
+          'application/json': {
+            schema: {
+              'x-ts-type': User,
+            },
+          },
+        },
+      },
+    },
+  })
+  async userDetails(): Promise<User> {
+    return this.userService.findUserById(this.user[securityId]);
   }
 
   /**
