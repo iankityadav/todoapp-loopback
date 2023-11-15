@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {
   Count,
   CountSchema,
@@ -18,10 +19,11 @@ import {
 import {Todo, User} from '../models';
 import {UserRepository} from '../repositories';
 
+@authenticate('jwt')
 export class UserTodoController {
   constructor(
     @repository(UserRepository) protected userRepository: UserRepository,
-  ) {}
+  ) { }
 
   @get('/users/{id}/todos', {
     responses: {
