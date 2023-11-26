@@ -1,0 +1,28 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Checkout GitHub Action"
+      - uses: actions/checkout@v3
+      - name: Azure Container Registry Login
+      - uses: Azure/docker-login@v1
+        with:
+          # Container registry username
+          username: ${{ secrets.ACR_USERNAME }}
+          # Container registry password
+          password: ${{ secrets.ACR_PASSWORD }}
+          # Container registry server url
+          login-server: ${{ secrets.ACR_SERVER }}
+      - run: |
+          docker build . -t ${{ secrets.ACR_SERVER }}/todo-loopback:latest
+          docker push ${{ secrets.ACR_SERVER }}/todo-loopback:latest
+        
